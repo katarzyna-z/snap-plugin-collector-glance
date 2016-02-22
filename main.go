@@ -15,38 +15,23 @@ limitations under the License.
 package main
 
 import (
-    openstackintel "github.com/intelsdi-x/snap-plugin-collector-glance/openstack"
-    "github.com/intelsdi-x/snap-plugin-collector-glance/openstack/v2/glance"
-    "fmt"
-)
+    "os"
 
-const (
-    endpoint = "http://192.168.20.2:5000"
-    user = "admin"
-    password = "admin"
-    tenant = "admin"
+    "github.com/intelsdi-x/snap/control/plugin"
+
+    "github.com/intelsdi-x/snap-plugin-collector-glance/collector"
 )
 
 func main(){
-    cmn := openstackintel.Common{}
-    provider, err := openstackintel.Authenticate(endpoint, user, password, tenant)
-    if err != nil {
-        panic(err)
+
+    plg := collector.New()
+    if plg == nil {
+        panic("Plugin could not be initialized")
     }
 
-    apiv, err := cmn.GetApiVersions(provider)
-    if err != nil {
-        panic(err)
-    }
-
-    chosen, err := openstackintel.ChooseVersion(apiv)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(chosen)
-
-    srv := glance.ServiceV2{}
-    img, err := srv.GetImages(provider)
-
-    fmt.Println(img)
+    plugin.Start(
+		collector.Meta(),
+		plg,
+		os.Args[1],
+	)
 }

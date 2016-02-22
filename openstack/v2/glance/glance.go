@@ -23,12 +23,13 @@ import (
 	openstackintel "github.com/intelsdi-x/snap-plugin-collector-glance/openstack"
 	"github.com/intelsdi-x/snap-plugin-collector-glance/openstack/v2/images"
 	"github.com/intelsdi-x/snap-plugin-collector-glance/types"
+	"fmt"
 )
 
 // ServiceV2 serves as dispatcher for Glance API version 2.0
 type ServiceV2 struct{}
 
-// GetLimits collects tenant limits by sending REST call to cinderhost:8776/v2/tenant_id/limits
+// GetLimits collects images by sending REST call to glancehost:9292/v2/images
 func (s ServiceV2) GetImages(provider *gophercloud.ProviderClient) (types.Images, error) {
 	imgsGlance := types.Images{}
 
@@ -36,7 +37,7 @@ func (s ServiceV2) GetImages(provider *gophercloud.ProviderClient) (types.Images
 	if err != nil {
 		return imgsGlance, err
 	}
-
+	fmt.Println(client.ResourceBaseURL())
 	imgs, err := images.Get(client).Extract()
 	if err != nil {
 		return imgsGlance, err

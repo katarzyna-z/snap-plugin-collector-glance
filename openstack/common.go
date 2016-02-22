@@ -39,7 +39,7 @@ var apiPriority = map[string]int{
 // Commoner provides abstraction for shared functions mainly for mocking
 type Commoner interface {
 	GetTenants(endpoint, user, password string) ([]types.Tenant, error)
-	GetApiVersions(provider *gophercloud.ProviderClient) ([]string, error)
+	GetApiVersions(provider *gophercloud.ProviderClient) ([]types.ApiVersion, error)
 }
 
 // Common is a receiver for Commoner interface
