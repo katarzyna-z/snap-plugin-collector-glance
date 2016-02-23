@@ -1,0 +1,19 @@
+{
+    "version": 1,
+    "schedule": {
+        "type": "simple",
+        "interval": "60s"
+    },
+    "workflow": {
+        "collect": {
+            "metrics": {
+		        "/intel/openstack/glance/demo/images/count": {},
+		        "/intel/openstack/glance/demo/images/bytes": {}
+           },
+            "config": {
+            },
+            "process": null,
+            "publish": null
+        }
+    }
+}

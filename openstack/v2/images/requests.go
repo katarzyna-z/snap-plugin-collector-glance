@@ -18,7 +18,6 @@ import (
 	"net/http"
 
 	"github.com/rackspace/gophercloud"
-	"fmt"
 )
 
 // Get will retrieve the volume type with the provided ID. To extract the volume
@@ -28,7 +27,6 @@ func Get(client *gophercloud.ServiceClient) GetResult {
 	reqOpts := gophercloud.RequestOpts{
 		OkCodes: []int{http.StatusOK, http.StatusMultipleChoices},
 	}
-	fmt.Println(getURL(client, "images"))
 	_, res.Err = client.Get(getURL(client, "images"), &res.Body, &reqOpts)
 	return res
 }

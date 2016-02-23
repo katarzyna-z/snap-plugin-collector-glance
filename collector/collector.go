@@ -169,10 +169,10 @@ func Meta() *plugin.PluginMeta {
 }
 
 type collector struct {
-	host    string
-	tenants str.StringSet
-	service services.Service
-	common  openstackintel.Commoner
+	host      string
+	tenants   str.StringSet
+	service   services.Service
+	common    openstackintel.Commoner
 	providers map[string]*gophercloud.ProviderClient
 }
 

@@ -23,7 +23,6 @@ import (
 	openstackintel "github.com/intelsdi-x/snap-plugin-collector-glance/openstack"
 	"github.com/intelsdi-x/snap-plugin-collector-glance/openstack/v2/images"
 	"github.com/intelsdi-x/snap-plugin-collector-glance/types"
-	"fmt"
 )
 
 // ServiceV2 serves as dispatcher for Glance API version 2.0
@@ -37,7 +36,7 @@ func (s ServiceV2) GetImages(provider *gophercloud.ProviderClient) (types.Images
 	if err != nil {
 		return imgsGlance, err
 	}
-	fmt.Println(client.ResourceBaseURL())
+
 	imgs, err := images.Get(client).Extract()
 	if err != nil {
 		return imgsGlance, err
