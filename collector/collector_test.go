@@ -19,21 +19,20 @@ package collector
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/gorilla/mux"
 	th "github.com/rackspace/gophercloud/testhelper"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/core/cdata"
 	"github.com/intelsdi-x/snap/core/ctypes"
 
-	"github.com/intelsdi-x/snap-plugin-collector-glance/types"
 	str "github.com/intelsdi-x/snap-plugin-utilities/strings"
-	"github.com/rackspace/gophercloud"
 )
 
 type CollectorSuite struct {
@@ -43,14 +42,22 @@ type CollectorSuite struct {
 	Tenant1, Tenant2   string
 	Images             string
 	Img1Size, Img2Size int
+	Server             *httptest.Server
 }
 
 func (s *CollectorSuite) SetupSuite() {
+	// for glance calls
 	th.SetupHTTP()
-	registerRoot()
-	registerAuthentication(s)
-	registerTenants(s, "demo", "admin")
-	registerImages(s, 1000, 2000)
+
+	// for identity calls
+	router := mux.NewRouter()
+	s.Server = httptest.NewServer(router)
+
+	registerIdentityRoot(s, router)
+	registerIdentityTokens(s, router)
+	registerIdentityTenants(s, router, "demo", "admin")
+	registerGlanceApi(s)
+	registerGlanceImages(s, 1000, 2000)
 }
 
 func (s *CollectorSuite) TearDownSuite() {
@@ -59,7 +66,7 @@ func (s *CollectorSuite) TearDownSuite() {
 
 func (s *CollectorSuite) TestGetMetricTypes() {
 	Convey("Given config with enpoint, user and password defined", s.T(), func() {
-		cfg := setupCfg(th.Endpoint(), "me", "secret")
+		cfg := setupCfg(s.Server.URL, "me", "secret")
 
 		Convey("When GetMetricTypes() is called", func() {
 			collector := New()
@@ -85,86 +92,49 @@ func (s *CollectorSuite) TestGetMetricTypes() {
 	})
 }
 
-//func (s *CollectorSuite) TestCollectMetrics() {
-//	Convey("Given set of metric types", s.T(), func() {
-//		cfg := setupCfg(th.Endpoint(), "me", "secret")
-//		m1 := plugin.PluginMetricType{
-//			Namespace_: []string{"intel", "openstack", "cinder", "demo", "limits", "MaxTotalVolumeGigabytes"},
-//			Config_: cfg.ConfigDataNode}
-//		//m2 := plugin.PluginMetricType{
-//		//	Namespace_: []string{"intel", "openstack", "cinder", "demo", "volumes", "count"},
-//		//	Config_: &cfg.ConfigDataNode}
-//		//m3 := plugin.PluginMetricType{
-//		//	Namespace_: []string{"intel", "openstack", "cinder", "demo", "snapshots", "bytes"},
-//		//	Config_: &cfg.ConfigDataNode}
-//		//
-//
-//
-//		servMock := ServicesMock{}
-//		limits := types.Limits{
-//			MaxTotalVolumeGigabytes: 333,
-//			MaxTotalVolumes: 111,
-//		}
-//		servMock.On("GetLimits", mock.AnythingOfType("*gophercloud.ProviderClient")).Return(limits, nil)
-//
-//
-//		cmnMock := CommonMock{}
-//		tenants := []types.Tenant{types.Tenant{ID: "1fffff", Name: "demo"}}
-//		cmnMock.On("GetTenants", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(tenants, nil)
-//		cmnMock.On("GetApiVersions", mock.AnythingOfType("*gophercloud.ProviderClient")).Return([]string{"v1.0", "v2.0"}, nil)
-//
-//		Convey("When ColelctMetrics() is called", func() {
-//			collector := New()
-//
-//			collector.common = cmnMock
-//			collector.service = servMock
-//
-//			mts, err := collector.CollectMetrics([]plugin.PluginMetricType{m1})
-//
-//			Convey("Then no error should be reported", func() {
-//				So(err, ShouldBeNil)
-//			})
-//
-//			Convey("and proper metric types are returned", func() {
-//				metricNames := map[string]interface{}{}
-//				for _, m := range mts {
-//					ns := strings.Join(m.Namespace(), "/")
-//					metricNames[ns] = m.Data()
-//				}
-//
-//				So(len(mts), ShouldEqual, 1)
-//
-//			})
-//		})
-//	})
-//}
+func (s *CollectorSuite) TestCollectMetrics() {
+	Convey("Given set of metric types", s.T(), func() {
+		cfg := setupCfg(s.Server.URL, "me", "secret")
+		m1 := plugin.PluginMetricType{
+			Namespace_: []string{"intel", "openstack", "glance", "demo", "images", "Count"},
+			Config_:    cfg.ConfigDataNode}
+		m2 := plugin.PluginMetricType{
+			Namespace_: []string{"intel", "openstack", "glance", "demo", "images", "Bytes"},
+			Config_:    cfg.ConfigDataNode}
+
+		Convey("When ColelctMetrics() is called", func() {
+			collector := New()
+
+			mts, err := collector.CollectMetrics([]plugin.PluginMetricType{m1, m2})
+
+			Convey("Then no error should be reported", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("and proper metric types are returned", func() {
+				metricNames := map[string]interface{}{}
+				for _, m := range mts {
+					ns := strings.Join(m.Namespace(), "/")
+					metricNames[ns] = m.Data()
+				}
+				fmt.Println(metricNames)
+				So(len(mts), ShouldEqual, 2)
+
+				val, ok := metricNames["intel/openstack/glance/demo/images/Count"]
+				So(ok, ShouldBeTrue)
+				So(val, ShouldEqual, 2)
+
+				val, ok = metricNames["intel/openstack/glance/demo/images/Bytes"]
+				So(ok, ShouldBeTrue)
+				So(val, ShouldEqual, s.Img1Size+s.Img2Size)
+			})
+		})
+	})
+}
 
 func TestCollectorSuite(t *testing.T) {
 	collectorTestSuite := new(CollectorSuite)
 	suite.Run(t, collectorTestSuite)
-}
-
-type ServicesMock struct {
-	mock.Mock
-}
-
-func (servMock ServicesMock) GetImages(provider *gophercloud.ProviderClient) (types.Images, error) {
-	ret := servMock.Mock.Called(provider)
-	return ret.Get(0).(types.Images), ret.Error(1)
-}
-
-type CommonMock struct {
-	mock.Mock
-}
-
-func (cmnMock CommonMock) GetTenants(endpoint, user, password string) ([]types.Tenant, error) {
-	ret := cmnMock.Mock.Called(endpoint, user, password)
-	return ret.Get(0).([]types.Tenant), ret.Error(1)
-}
-
-func (cmnMock CommonMock) GetApiVersions(provider *gophercloud.ProviderClient) ([]types.ApiVersion, error) {
-	ret := cmnMock.Mock.Called(provider)
-	return ret.Get(0).([]types.ApiVersion), ret.Error(1)
 }
 
 func setupCfg(endpoint, user, password string) plugin.PluginConfigType {
@@ -175,8 +145,8 @@ func setupCfg(endpoint, user, password string) plugin.PluginConfigType {
 	return plugin.PluginConfigType{ConfigDataNode: node}
 }
 
-func registerRoot() {
-	th.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+func registerIdentityRoot(s *CollectorSuite, r *mux.Router) {
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 				{
 					"versions": {
@@ -198,15 +168,15 @@ func registerRoot() {
 						]
 					}
 				}
-				`, th.Endpoint()+"v3/", th.Endpoint()+"v2.0/")
+				`, s.Server.URL+"/v3/", s.Server.URL+"/v2.0/")
 	})
 }
 
-func registerAuthentication(s *CollectorSuite) {
+func registerIdentityTokens(s *CollectorSuite, r *mux.Router) {
 	s.V1 = "v1"
 	s.V2 = "v2"
 	s.Token = "2ed210f132564f21b178afb197ee99e3"
-	th.Mux.HandleFunc("/v2.0/tokens", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/v2.0/tokens", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 				{
 					"access": {
@@ -253,13 +223,11 @@ func registerAuthentication(s *CollectorSuite) {
 	})
 }
 
-func registerTenants(s *CollectorSuite, tenant1 string, tenant2 string) {
+func registerIdentityTenants(s *CollectorSuite, r *mux.Router, tenant1 string, tenant2 string) {
 	s.Tenant1 = tenant1
 	s.Tenant2 = tenant2
-	th.Mux.HandleFunc("/v2.0/tenants", func(w http.ResponseWriter, r *http.Request) {
-		th.TestMethod(s.T(), r, "GET")
-		th.TestHeader(s.T(), r, "X-Auth-Token", s.Token)
-
+	r.HandleFunc("/v2.0/tenants", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("X-Auth-Token", s.Token)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
@@ -282,17 +250,100 @@ func registerTenants(s *CollectorSuite, tenant1 string, tenant2 string) {
 				"tenants_links": []
 			}
 		`, s.Tenant1, s.Tenant2)
+	}).Methods("GET")
+}
+
+func registerGlanceApi(s *CollectorSuite) {
+	th.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(s.T(), r, "GET")
+		//th.TestHeader(s.T(), r, "X-Auth-Token", s.Token)
+
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `
+		{
+			"versions": [
+				{
+					"id": "v2.3",
+					"links": [
+						{
+							"href": "%s/v2/",
+							"rel": "self"
+						}
+					],
+					"status": "CURRENT"
+				},
+				{
+					"id": "v2.2",
+					"links": [
+						{
+							"href": "%s/v2/",
+							"rel": "self"
+						}
+					],
+					"status": "SUPPORTED"
+				},
+				{
+					"id": "v2.1",
+					"links": [
+						{
+							"href": "%s/v2/",
+							"rel": "self"
+						}
+					],
+					"status": "SUPPORTED"
+				},
+				{
+					"id": "v2.0",
+					"links": [
+						{
+							"href": "%s/v2/",
+							"rel": "self"
+						}
+					],
+					"status": "SUPPORTED"
+				},
+				{
+					"id": "v1.1",
+					"links": [
+						{
+							"href": "%s/v1/",
+							"rel": "self"
+						}
+					],
+					"status": "SUPPORTED"
+				},
+				{
+					"id": "v1.0",
+					"links": [
+						{
+							"href": "%s/v1/",
+							"rel": "self"
+						}
+					],
+					"status": "SUPPORTED"
+				}
+			]
+		}
+		`,
+			th.Endpoint(),
+			th.Endpoint(),
+			th.Endpoint(),
+			th.Endpoint(),
+			th.Endpoint(),
+			th.Endpoint(),
+		)
 	})
 }
 
-func registerImages(s *CollectorSuite, size1 int, size2 int) {
+func registerGlanceImages(s *CollectorSuite, size1 int, size2 int) {
 	s.Images = "/" + s.V2 + "/images"
 	s.Img1Size = size1
 	s.Img2Size = size2
 
 	th.Mux.HandleFunc(s.Images, func(w http.ResponseWriter, r *http.Request) {
 		th.TestMethod(s.T(), r, "GET")
-		th.TestHeader(s.T(), r, "X-Auth-Token", s.Token)
+		//th.TestHeader(s.T(), r, "X-Auth-Token", s.Token)
 
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

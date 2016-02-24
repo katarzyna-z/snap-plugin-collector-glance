@@ -112,7 +112,6 @@ func (c *collector) CollectMetrics(metricTypes []plugin.PluginMetricType) ([]plu
 	allImages := map[string]types.Images{}
 
 	for _, tenant := range c.tenants.Elements() {
-		fmt.Println("tenant:", tenant)
 		if err := c.authenticate(metricTypes[0], tenant); err != nil {
 			return nil, err
 		}
