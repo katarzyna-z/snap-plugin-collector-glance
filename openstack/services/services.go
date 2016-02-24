@@ -25,24 +25,24 @@ import (
 	"github.com/intelsdi-x/snap-plugin-collector-glance/types"
 )
 
-// Cinderer allows usage of different Glance API versions for metric collection
-type Cinderer interface {
+// Glancer allows usage of different Glance API versions for metric collection
+type Glancer interface {
 	GetImages(provider *gophercloud.ProviderClient) (types.Images, error)
 }
 
 // Services serves as a API calls dispatcher
 type Service struct {
-	cinder Cinderer
+	glancer Glancer
 }
 
 // Set allows to set proper API version implementation
-func (c *Service) Set(new Cinderer) {
-	c.cinder = new
+func (c *Service) Set(new Glancer) {
+	c.glancer = new
 }
 
 // GetImages dispatches call to proper API version calls to collect images metrics
 func (s Service) GetImages(provider *gophercloud.ProviderClient) (types.Images, error) {
-	return s.cinder.GetImages(provider)
+	return s.glancer.GetImages(provider)
 }
 
 // Dispatch redirects to selected Glance API version based on priority

@@ -19,7 +19,7 @@ import (
 	"net/http"
 )
 
-// Get will retrieve the volume type with the provided ID. To extract the volume
+// Get will retrieve the image type with the provided ID. To extract the image
 // type from the result, call the Extract method on the GetResult.
 func Get(client *gophercloud.ServiceClient) GetResult {
 	var res GetResult
