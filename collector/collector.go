@@ -108,7 +108,10 @@ func (c *collector) CollectMetrics(metricTypes []plugin.PluginMetricType) ([]plu
 		tenant := namespace[3]
 		c.tenants.Add(tenant)
 	}
-
+	// TODO: instead of separate calls per each tenant, gather image information in following way:
+	// TODO: v2/images?visibility=public
+	// TODO: v2/images?visibility=private
+	// TODO: v2/images?visibility=shared
 	allImages := map[string]types.Images{}
 
 	for _, tenant := range c.tenants.Elements() {
