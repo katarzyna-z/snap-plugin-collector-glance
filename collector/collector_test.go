@@ -2,7 +2,7 @@
 
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
-Copyright 2015 Intel Corporation
+Copyright 2016 Intel Corporation
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -64,9 +64,9 @@ func (s *CollectorSuite) TearDownSuite() {
 	th.TeardownHTTP()
 }
 
-func (s *CollectorSuite) TestGetMetricTypes() {
+func (s *CollectorSuite) TestGetMetricTypesStar() {
 	Convey("Given config with enpoint, user and password defined", s.T(), func() {
-		cfg := setupCfg(s.Server.URL, "me", "secret")
+		cfg := setupCfg(s.Server.URL, "me", "secret", "")
 
 		Convey("When GetMetricTypes() is called", func() {
 			collector := New()
@@ -82,11 +82,43 @@ func (s *CollectorSuite) TestGetMetricTypes() {
 					metricNames = append(metricNames, strings.Join(m.Namespace(), "/"))
 				}
 
-				So(len(mts), ShouldEqual, 4)
-				So(str.Contains(metricNames, "intel/openstack/glance/demo/images/Count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/demo/images/Bytes"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/admin/images/Count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/admin/images/Bytes"), ShouldBeTrue)
+				So(len(mts), ShouldEqual, 6)
+				So(str.Contains(metricNames, "intel/openstack/glance/*/images/private/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/*/images/public/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/*/images/shared/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/*/images/private/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/*/images/public/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/*/images/shared/bytes"), ShouldBeTrue)
+			})
+		})
+	})
+}
+
+func (s *CollectorSuite) TestGetMetricTypesTenant() {
+	Convey("Given config with enpoint, user and password defined", s.T(), func() {
+		cfg := setupCfg(s.Server.URL, "me", "secret", "tenant")
+
+		Convey("When GetMetricTypes() is called", func() {
+			collector := New()
+			mts, err := collector.GetMetricTypes(cfg)
+
+			Convey("Then no error should be reported", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("and proper metric types are returned", func() {
+				metricNames := []string{}
+				for _, m := range mts {
+					metricNames = append(metricNames, strings.Join(m.Namespace(), "/"))
+				}
+
+				So(len(mts), ShouldEqual, 6)
+				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/private/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/public/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/shared/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/private/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/public/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/shared/bytes"), ShouldBeTrue)
 			})
 		})
 	})
@@ -94,12 +126,12 @@ func (s *CollectorSuite) TestGetMetricTypes() {
 
 func (s *CollectorSuite) TestCollectMetrics() {
 	Convey("Given set of metric types", s.T(), func() {
-		cfg := setupCfg(s.Server.URL, "me", "secret")
+		cfg := setupCfg(s.Server.URL, "me", "secret", "tenant")
 		m1 := plugin.PluginMetricType{
-			Namespace_: []string{"intel", "openstack", "glance", "demo", "images", "Count"},
+			Namespace_: []string{"intel", "openstack", "glance", "tenant", "images", "public", "count"},
 			Config_:    cfg.ConfigDataNode}
 		m2 := plugin.PluginMetricType{
-			Namespace_: []string{"intel", "openstack", "glance", "demo", "images", "Bytes"},
+			Namespace_: []string{"intel", "openstack", "glance", "tenant", "images", "public", "bytes"},
 			Config_:    cfg.ConfigDataNode}
 
 		Convey("When ColelctMetrics() is called", func() {
@@ -120,11 +152,11 @@ func (s *CollectorSuite) TestCollectMetrics() {
 				fmt.Println(metricNames)
 				So(len(mts), ShouldEqual, 2)
 
-				val, ok := metricNames["intel/openstack/glance/demo/images/Count"]
+				val, ok := metricNames["intel/openstack/glance/tenant/images/public/count"]
 				So(ok, ShouldBeTrue)
 				So(val, ShouldEqual, 2)
 
-				val, ok = metricNames["intel/openstack/glance/demo/images/Bytes"]
+				val, ok = metricNames["intel/openstack/glance/tenant/images/public/bytes"]
 				So(ok, ShouldBeTrue)
 				So(val, ShouldEqual, s.Img1Size+s.Img2Size)
 			})
@@ -137,11 +169,14 @@ func TestCollectorSuite(t *testing.T) {
 	suite.Run(t, collectorTestSuite)
 }
 
-func setupCfg(endpoint, user, password string) plugin.PluginConfigType {
+func setupCfg(endpoint, user, password, tenant string) plugin.PluginConfigType {
 	node := cdata.NewNode()
 	node.AddItem("endpoint", ctypes.ConfigValueStr{Value: endpoint})
 	node.AddItem("user", ctypes.ConfigValueStr{Value: user})
 	node.AddItem("password", ctypes.ConfigValueStr{Value: password})
+	if tenant != "" {
+		node.AddItem("tenant", ctypes.ConfigValueStr{Value: tenant})
+	}
 	return plugin.PluginConfigType{ConfigDataNode: node}
 }
 

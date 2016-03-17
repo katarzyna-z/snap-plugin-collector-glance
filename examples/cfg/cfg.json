@@ -10,9 +10,6 @@
     "collector": {
       "glance": {
         "all": {
-          "endpoint": "https://public.fuel.local:5000",
-          "user": "admin",
-          "password": "admin"
         }
       }
     },

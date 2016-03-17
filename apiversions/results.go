@@ -20,7 +20,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// APIVersion represents an API version for Cinder.
+// APIVersion represents an API version for Glance.
 type APIVersion struct {
 	ID     string              `json:"id" mapstructure:"id"`
 	Status string              `json:"status" mapstructure:"status"`

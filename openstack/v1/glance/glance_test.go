@@ -65,8 +65,13 @@ func (s *GlanceV1Suite) TestGetImages() {
 				imgs, err := dispatch.GetImages(provider)
 
 				Convey("Then proper image values are returned", func() {
-					So(imgs.Count, ShouldEqual, 2)
-					So(imgs.Bytes, ShouldEqual, s.Img1Size+s.Img2Size)
+					public := imgs["public"]
+					So(public.Count, ShouldEqual, 1)
+					So(public.Bytes, ShouldEqual, s.Img2Size)
+
+					private := imgs["private"]
+					So(private.Count, ShouldEqual, 1)
+					So(private.Bytes, ShouldEqual, s.Img1Size)
 				})
 
 				Convey("and no error reported", func() {
@@ -156,7 +161,7 @@ func registerAuthentication(s *GlanceV1Suite) {
 }
 
 func registerImages(s *GlanceV1Suite, size1 int, size2 int) {
-	s.Images = "/" + s.V1 + "/images"
+	s.Images = "/" + s.V1 + "/images/detail"
 	s.Img1Size = size1
 	s.Img2Size = size2
 
@@ -168,51 +173,48 @@ func registerImages(s *GlanceV1Suite, size1 int, size2 int) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `
 				{
-					"first": "/v1/images",
 					"images": [
 						{
-							"checksum": "eb9139e4942121f22bbc2afc0400b2a4",
-							"container_format": "ami",
-							"created_at": "2016-02-22T19:06:13Z",
-							"disk_format": "ami",
-							"file": "/v1/images/5ead7530-3293-40d2-a0ca-f441a33a99e4/file",
-							"id": "5ead7530-3293-40d2-a0ca-f441a33a99e4",
-							"kernel_id": "e0f483ec-713f-4768-ba1a-220a16b97287",
-							"min_disk": 0,
-							"min_ram": 0,
-							"name": "cirros-0.3.4-x86_64-uec",
-							"owner": "ded341b6891c4524b202f08f8808986f",
+							"checksum": "19e5f96b987929ef0d56759c2eedf611",
+							"container_format": "bare",
+							"created_at": "2016-02-25T10:46:13.000000",
+							"deleted": false,
+							"deleted_at": null,
+							"disk_format": "raw",
+							"id": "31bbc179-5a75-4d52-98ea-f4f5f6c76279",
+							"is_public": false,
+							"min_disk": 10,
+							"min_ram": 4,
+							"name": "AdminVM",
+							"owner": "d98e06adf5db49ad9f372625cad7840b",
+							"properties": {
+								"description": "Private VM for admin"
+							},
 							"protected": false,
-							"ramdisk_id": "95e4ad60-adaf-469d-9711-6baec2ab8a53",
-							"schema": "/v1/schemas/image",
-							"self": "/v1/images/5ead7530-3293-40d2-a0ca-f441a33a99e4",
 							"size": %d,
 							"status": "active",
-							"tags": [],
-							"updated_at": "2016-02-22T19:06:13Z",
-							"virtual_size": null,
-							"visibility": "public"
+							"updated_at": "2016-02-25T10:47:15.000000",
+							"virtual_size": null
 						},
 						{
-							"checksum": "8a40c862b5735975d82605c1dd395796",
-							"container_format": "aki",
-							"created_at": "2016-02-22T19:06:12Z",
-							"disk_format": "aki",
-							"file": "/v1/images/e0f483ec-713f-4768-ba1a-220a16b97287/file",
-							"id": "e0f483ec-713f-4768-ba1a-220a16b97287",
+							"checksum": "ee1eca47dc88f4879d8a229cc70a07c6",
+							"container_format": "bare",
+							"created_at": "2016-02-05T16:04:01.000000",
+							"deleted": false,
+							"deleted_at": null,
+							"disk_format": "qcow2",
+							"id": "e256d524-bbd7-40af-9bfa-463d86917459",
+							"is_public": true,
 							"min_disk": 0,
-							"min_ram": 0,
-							"name": "cirros-0.3.4-x86_64-uec-kernel",
-							"owner": "ded341b6891c4524b202f08f8808986f",
+							"min_ram": 64,
+							"name": "TestVM",
+							"owner": "76cd5afce159466b885a4731c06998cb",
+							"properties": {},
 							"protected": false,
-							"schema": "/v1/schemas/image",
-							"self": "/v1/images/e0f483ec-713f-4768-ba1a-220a16b97287",
 							"size": %d,
 							"status": "active",
-							"tags": [],
-							"updated_at": "2016-02-22T19:06:12Z",
-							"virtual_size": null,
-							"visibility": "public"
+							"updated_at": "2016-02-05T16:04:02.000000",
+							"virtual_size": null
 						}
 					],
 					"schema": "/v1/schemas/images"

@@ -18,6 +18,8 @@ limitations under the License.
 package glance
 
 import (
+	"fmt"
+
 	"github.com/rackspace/gophercloud"
 
 	openstackintel "github.com/intelsdi-x/snap-plugin-collector-glance/openstack"
@@ -29,23 +31,32 @@ import (
 type ServiceV2 struct{}
 
 // GetLimits collects images by sending REST call to glancehost:9292/v2/images
-func (s ServiceV2) GetImages(provider *gophercloud.ProviderClient) (types.Images, error) {
-	imgsGlance := types.Images{}
+func (s ServiceV2) GetImages(provider *gophercloud.ProviderClient) (map[string]types.Images, error) {
+	imgTypes := map[string]types.Images{
+		"public":  types.Images{},
+		"private": types.Images{},
+		"shared":  types.Images{},
+	}
 
 	client, err := openstackintel.NewImageService(provider, gophercloud.EndpointOpts{})
 	if err != nil {
-		return imgsGlance, err
+		return nil, err
 	}
 
 	imgs, err := images.Get(client).Extract()
 	if err != nil {
-		return imgsGlance, err
+		return nil, err
 	}
 
 	for _, img := range imgs {
-		imgsGlance.Count += 1
-		imgsGlance.Bytes += img.Size
+		if imgType, found := imgTypes[img.Visibility]; found {
+			imgType.Count += 1
+			imgType.Bytes += img.Size
+			imgTypes[img.Visibility] = imgType
+		} else {
+			return nil, fmt.Errorf("Uknown image visibility type found {%s}", img.Visibility)
+		}
 	}
 
-	return imgsGlance, nil
+	return imgTypes, nil
 }

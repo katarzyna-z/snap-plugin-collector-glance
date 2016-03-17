@@ -16,6 +16,7 @@ package images
 
 import "github.com/rackspace/gophercloud"
 
-func getURL(c *gophercloud.ServiceClient, path string) string {
-	return c.ServiceURL("v1", path)
+func getURL(c *gophercloud.ServiceClient, paths ...string) string {
+	fullPath := append([]string{"v1"}, paths...)
+	return c.ServiceURL(fullPath...)
 }

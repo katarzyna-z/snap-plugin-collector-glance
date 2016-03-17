@@ -28,6 +28,6 @@ func Get(client *gophercloud.ServiceClient) GetResult {
 		OkCodes: []int{http.StatusOK, http.StatusMultipleChoices},
 	}
 
-	_, res.Err = client.Get(getURL(client, "images"), &res.Body, &reqOpts)
+	_, res.Err = client.Get(getURL(client, "images", "detail"), &res.Body, &reqOpts)
 	return res
 }

@@ -65,8 +65,9 @@ func (s *GlanceV2Suite) TestGetImages() {
 				imgs, err := dispatch.GetImages(provider)
 
 				Convey("Then proper image values are returned", func() {
-					So(imgs.Count, ShouldEqual, 2)
-					So(imgs.Bytes, ShouldEqual, s.Img1Size+s.Img2Size)
+					public := imgs["public"]
+					So(public.Count, ShouldEqual, 2)
+					So(public.Bytes, ShouldEqual, s.Img1Size+s.Img2Size)
 				})
 
 				Convey("and no error reported", func() {

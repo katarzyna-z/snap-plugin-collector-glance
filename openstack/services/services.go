@@ -27,7 +27,7 @@ import (
 
 // Glancer allows usage of different Glance API versions for metric collection
 type Glancer interface {
-	GetImages(provider *gophercloud.ProviderClient) (types.Images, error)
+	GetImages(provider *gophercloud.ProviderClient) (map[string]types.Images, error)
 }
 
 // Services serves as a API calls dispatcher
@@ -41,7 +41,7 @@ func (c *Service) Set(new Glancer) {
 }
 
 // GetImages dispatches call to proper API version calls to collect images metrics
-func (s Service) GetImages(provider *gophercloud.ProviderClient) (types.Images, error) {
+func (s Service) GetImages(provider *gophercloud.ProviderClient) (map[string]types.Images, error) {
 	return s.glancer.GetImages(provider)
 }
 

@@ -17,12 +17,13 @@ snap plugin for collecting metrics from OpenStack Glance module.
 ## Getting Started
 
 Plugin collects metrics by communicating with OpenStack by REST API.
-It can be used in- as well as out-of-bands. 
+It can run locally on the host, or in proxy mode (communicating with the host via HTTP(S)). 
 
 ### System Requirements
 
  - Linux
  - OpenStack deployment available
+ - Supports Glance v1 and v2 APIs 
 
 ### Installation
 #### Download glance plugin binary:
@@ -45,19 +46,23 @@ This builds the plugin in `/build/rootfs`
 ### Collected Metrics
 This plugin has the ability to gather the following metrics:
 
-Namespace | Data Type | Description (optional)
+Namespace | Data Type | Description
 ----------|-----------|-----------------------
 intel/openstack/glance/\<tenant_name\>/images/Count | int | Total number of OpenStack images for given tenant
 intel/openstack/glance/\<tenant_name\>/images/Bytes | int | Total number of bytes used by OpenStack images for given tenant
 
 ### snap's Global Config
 Global configuration files are described in snap's documentation. You have to add section "glance" in "collector" section and then specify following options:
--  `"endpoint"` - URL for OpenStack Identity endpoint aka Keystone (ex. `"http://keystone.public.org:5000"`)
-- `"user"` -  user name which has access to OpenStack
-- `"password"` - user password 
+- `"tenant"` - name of the tenant, this parameter is optional 
 
 ### Examples
 It is not suggested to set interval below 20 seconds. This may lead to overloading Keystone with authentication requests. 
+
+User need to provide following parameters in configuration for collector
+- `"endpoint"` - URL for OpenStack Identity endpoint aka Keystone (ex. `"http://keystone.public.org:5000"`)
+- `"tenant"` - name of the tenant, this parameter is optionadl 
+- `"user"` -  user name which has access to tenant
+- `"password"` - user password 
 
 Example task manifest to use <glance> plugin:
 ```
@@ -70,10 +75,14 @@ Example task manifest to use <glance> plugin:
     "workflow": {
         "collect": {
             "metrics": {
-		        "/intel/openstack/glance/demo/images/Count": {},
-		        "/intel/openstack/glance/demo/images/Bytes": {}
+		        "/intel/openstack/glance/demo/images/public/count": {},
+		        "/intel/openstack/glance/demo/images/public/bytes": {}
            },
             "config": {
+                "endpoint": "http://keystone.public.org:5000",
+                "user": "admin",
+                "password": "admin",
+                "tenant": "test_tenant"
             },
             "process": null,
             "publish": null
@@ -81,7 +90,6 @@ Example task manifest to use <glance> plugin:
     }
 }
 ```
-
 
 ### Roadmap
 There isn't a current roadmap for this plugin, but it is in active development. As we launch this plugin, we do not have any outstanding requirements for the next release.

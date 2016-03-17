@@ -28,24 +28,37 @@ import (
 // ServiceV2 serves as dispatcher for Glance API version 2.0
 type ServiceV1 struct{}
 
-// GetLimits collects images by sending REST call to glancehost:9292/v1/images
-func (s ServiceV1) GetImages(provider *gophercloud.ProviderClient) (types.Images, error) {
-	imgsGlance := types.Images{}
+// GetLimits collects images by sending REST call to glancehost:9292/v1/images/detail
+func (s ServiceV1) GetImages(provider *gophercloud.ProviderClient) (map[string]types.Images, error) {
+	imgTypes := map[string]types.Images{
+		"public":  types.Images{},
+		"private": types.Images{},
+		"shared":  types.Images{},
+	}
 
 	client, err := openstackintel.NewImageService(provider, gophercloud.EndpointOpts{})
 	if err != nil {
-		return imgsGlance, err
+		return nil, err
 	}
 
 	imgs, err := images.Get(client).Extract()
 	if err != nil {
-		return imgsGlance, err
+		return nil, err
 	}
 
 	for _, img := range imgs {
-		imgsGlance.Count += 1
-		imgsGlance.Bytes += img.Size
+		var visibility string
+		if img.IsPublic {
+			visibility = "public"
+		} else {
+			visibility = "private"
+		}
+
+		imgType := imgTypes[visibility]
+		imgType.Count += 1
+		imgType.Bytes += img.Size
+		imgTypes[visibility] = imgType
 	}
 
-	return imgsGlance, nil
+	return imgTypes, nil
 }
