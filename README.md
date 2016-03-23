@@ -60,11 +60,11 @@ It is not suggested to set interval below 20 seconds. This may lead to overloadi
 
 User need to provide following parameters in configuration for collector
 - `"endpoint"` - URL for OpenStack Identity endpoint aka Keystone (ex. `"http://keystone.public.org:5000"`)
-- `"tenant"` - name of the tenant, this parameter is optionadl 
+- `"tenant"` - name of the tenant, this parameter is optional 
 - `"user"` -  user name which has access to tenant
 - `"password"` - user password 
 
-Example task manifest to use <glance> plugin:
+Example task manifest to use glance plugin:
 ```
 {
     "version": 1,
