@@ -1,0 +1,23 @@
+{
+    "version": 1,
+    "schedule": {
+        "type": "simple",
+        "interval": "60s"
+    },
+    "workflow": {
+        "collect": {
+            "metrics": {
+		        "/intel/openstack/glance/test_tenant/images/public/count": {},
+		        "/intel/openstack/glance/test_tenant/images/public/bytes": {}
+           },
+            "config": {
+                "endpoint": "http://keystone.public.org:5000",
+                "user": "admin",
+                "password": "admin",
+                "tenant": "test_tenant"
+            },
+            "process": null,
+            "publish": null
+        }
+    }
+}
