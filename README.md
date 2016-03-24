@@ -48,8 +48,12 @@ This plugin has the ability to gather the following metrics:
 
 Namespace | Data Type | Description
 ----------|-----------|-----------------------
-intel/openstack/glance/\<tenant_name\>/images/Count | int | Total number of OpenStack images for given tenant
-intel/openstack/glance/\<tenant_name\>/images/Bytes | int | Total number of bytes used by OpenStack images for given tenant
+intel/openstack/glance/\<tenant_name\>/images/public/count | int | Total number of OpenStack public images for given tenant
+intel/openstack/glance/\<tenant_name\>/images/private/count | int | Total number of OpenStack private images for given tenant
+intel/openstack/glance/\<tenant_name\>/images/shared/count | int | Total number of OpenStack shared images for given tenant
+intel/openstack/glance/\<tenant_name\>/images/public/bytes | int | Total number of bytes used by OpenStack private images for given tenant
+intel/openstack/glance/\<tenant_name\>/images/private/bytes | int | Total number of bytes used by OpenStack public images for given tenant
+intel/openstack/glance/\<tenant_name\>/images/shared/bytes | int | Total number of bytes used by OpenStack shared images for given tenant
 
 ### snap's Global Config
 Global configuration files are described in snap's documentation. You have to add section "glance" in "collector" section and then specify following options:
@@ -60,7 +64,7 @@ It is not suggested to set interval below 20 seconds. This may lead to overloadi
 
 User need to provide following parameters in configuration for collector
 - `"endpoint"` - URL for OpenStack Identity endpoint aka Keystone (ex. `"http://keystone.public.org:5000"`)
-- `"tenant"` - name of the tenant, this parameter is optional 
+- `"tenant"` - name of the tenant, this is required if not provided in global config 
 - `"user"` -  user name which has access to tenant
 - `"password"` - user password 
 
