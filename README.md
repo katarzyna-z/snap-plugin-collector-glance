@@ -79,14 +79,16 @@ Example task manifest to use glance plugin:
     "workflow": {
         "collect": {
             "metrics": {
-		        "/intel/openstack/glance/demo/images/public/count": {},
-		        "/intel/openstack/glance/demo/images/public/bytes": {}
+		        "/intel/openstack/glance/*/images/public/count": {},
+		        "/intel/openstack/glance/*/images/public/bytes": {}
            },
             "config": {
+              "/intel/openstack/glance": {
                 "endpoint": "http://keystone.public.org:5000",
                 "user": "admin",
                 "password": "admin",
                 "tenant": "test_tenant"
+              }
             },
             "process": null,
             "publish": null
