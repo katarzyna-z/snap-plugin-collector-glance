@@ -1,5 +1,3 @@
-// +build unit
-
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
 Copyright 2016 Intel Corporation
@@ -20,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -29,10 +26,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/intelsdi-x/snap/control/plugin"
+	"github.com/intelsdi-x/snap/core"
 	"github.com/intelsdi-x/snap/core/cdata"
 	"github.com/intelsdi-x/snap/core/ctypes"
 
-	str "github.com/intelsdi-x/snap-plugin-utilities/strings"
+	"github.com/intelsdi-x/snap-plugin-utilities/str"
 )
 
 type CollectorSuite struct {
@@ -79,16 +77,16 @@ func (s *CollectorSuite) TestGetMetricTypesStar() {
 			Convey("and proper metric types are returned", func() {
 				metricNames := []string{}
 				for _, m := range mts {
-					metricNames = append(metricNames, strings.Join(m.Namespace(), "/"))
+					metricNames = append(metricNames, m.Namespace().String())
 				}
 
 				So(len(mts), ShouldEqual, 6)
-				So(str.Contains(metricNames, "intel/openstack/glance/*/images/private/count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/*/images/public/count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/*/images/shared/count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/*/images/private/bytes"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/*/images/public/bytes"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/*/images/shared/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/*/images/private/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/*/images/public/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/*/images/shared/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/*/images/private/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/*/images/public/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/*/images/shared/bytes"), ShouldBeTrue)
 			})
 		})
 	})
@@ -109,16 +107,16 @@ func (s *CollectorSuite) TestGetMetricTypesTenant() {
 			Convey("and proper metric types are returned", func() {
 				metricNames := []string{}
 				for _, m := range mts {
-					metricNames = append(metricNames, strings.Join(m.Namespace(), "/"))
+					metricNames = append(metricNames, m.Namespace().String())
 				}
 
 				So(len(mts), ShouldEqual, 6)
-				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/private/count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/public/count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/shared/count"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/private/bytes"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/public/bytes"), ShouldBeTrue)
-				So(str.Contains(metricNames, "intel/openstack/glance/tenant/images/shared/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/tenant/images/private/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/tenant/images/public/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/tenant/images/shared/count"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/tenant/images/private/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/tenant/images/public/bytes"), ShouldBeTrue)
+				So(str.Contains(metricNames, "/intel/openstack/glance/tenant/images/shared/bytes"), ShouldBeTrue)
 			})
 		})
 	})
@@ -127,17 +125,17 @@ func (s *CollectorSuite) TestGetMetricTypesTenant() {
 func (s *CollectorSuite) TestCollectMetrics() {
 	Convey("Given set of metric types", s.T(), func() {
 		cfg := setupCfg(s.Server.URL, "me", "secret", "tenant")
-		m1 := plugin.PluginMetricType{
-			Namespace_: []string{"intel", "openstack", "glance", "tenant", "images", "public", "count"},
+		m1 := plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "openstack", "glance", "tenant", "images", "public", "count"),
 			Config_:    cfg.ConfigDataNode}
-		m2 := plugin.PluginMetricType{
-			Namespace_: []string{"intel", "openstack", "glance", "tenant", "images", "public", "bytes"},
+		m2 := plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "openstack", "glance", "tenant", "images", "public", "bytes"),
 			Config_:    cfg.ConfigDataNode}
 
 		Convey("When ColelctMetrics() is called", func() {
 			collector := New()
 
-			mts, err := collector.CollectMetrics([]plugin.PluginMetricType{m1, m2})
+			mts, err := collector.CollectMetrics([]plugin.MetricType{m1, m2})
 
 			Convey("Then no error should be reported", func() {
 				So(err, ShouldBeNil)
@@ -146,17 +144,17 @@ func (s *CollectorSuite) TestCollectMetrics() {
 			Convey("and proper metric types are returned", func() {
 				metricNames := map[string]interface{}{}
 				for _, m := range mts {
-					ns := strings.Join(m.Namespace(), "/")
+					ns := m.Namespace().String()
 					metricNames[ns] = m.Data()
 				}
 				fmt.Println(metricNames)
 				So(len(mts), ShouldEqual, 2)
 
-				val, ok := metricNames["intel/openstack/glance/tenant/images/public/count"]
+				val, ok := metricNames["/intel/openstack/glance/tenant/images/public/count"]
 				So(ok, ShouldBeTrue)
 				So(val, ShouldEqual, 2)
 
-				val, ok = metricNames["intel/openstack/glance/tenant/images/public/bytes"]
+				val, ok = metricNames["/intel/openstack/glance/tenant/images/public/bytes"]
 				So(ok, ShouldBeTrue)
 				So(val, ShouldEqual, s.Img1Size+s.Img2Size)
 			})
@@ -169,7 +167,7 @@ func TestCollectorSuite(t *testing.T) {
 	suite.Run(t, collectorTestSuite)
 }
 
-func setupCfg(endpoint, user, password, tenant string) plugin.PluginConfigType {
+func setupCfg(endpoint, user, password, tenant string) plugin.ConfigType {
 	node := cdata.NewNode()
 	node.AddItem("endpoint", ctypes.ConfigValueStr{Value: endpoint})
 	node.AddItem("user", ctypes.ConfigValueStr{Value: user})
@@ -177,7 +175,7 @@ func setupCfg(endpoint, user, password, tenant string) plugin.PluginConfigType {
 	if tenant != "" {
 		node.AddItem("tenant", ctypes.ConfigValueStr{Value: tenant})
 	}
-	return plugin.PluginConfigType{ConfigDataNode: node}
+	return plugin.ConfigType{ConfigDataNode: node}
 }
 
 func registerIdentityRoot(s *CollectorSuite, r *mux.Router) {
