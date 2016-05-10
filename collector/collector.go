@@ -15,7 +15,6 @@ limitations under the License.
 package collector
 
 import (
-	"os"
 	"strings"
 	"time"
 
@@ -43,13 +42,8 @@ const (
 
 // New creates initialized instance of Glance collector
 func New() *collector {
-	host, err := os.Hostname()
-	if err != nil {
-		host = "localhost"
-	}
-
 	providers := map[string]*gophercloud.ProviderClient{}
-	return &collector{host: host, providers: providers}
+	return &collector{providers: providers}
 }
 
 // GetMetricTypes returns list of available metric types
@@ -116,12 +110,6 @@ func (c *collector) CollectMetrics(metricTypes []plugin.MetricType) ([]plugin.Me
 
 	metrics := []plugin.MetricType{}
 	for _, metricType := range metricTypes {
-		tags := metricType.Tags()
-		if tags == nil {
-			tags = map[string]string{}
-		}
-		tags["hostname"] = c.host
-
 		namespace := metricType.Namespace().Strings()
 		// Construct temporary struct to generate namespace based on tags
 		metricContainer := struct {
@@ -140,7 +128,6 @@ func (c *collector) CollectMetrics(metricTypes []plugin.MetricType) ([]plugin.Me
 
 		// Extract values by namespace from temporary struct and create metrics
 		metric := plugin.MetricType{
-			Tags_:      tags,
 			Timestamp_: time.Now(),
 			Namespace_: metricType.Namespace(),
 			Data_:      ns.GetValueByNamespace(metricContainer, namespace[4:]),
@@ -171,7 +158,6 @@ func Meta() *plugin.PluginMeta {
 }
 
 type collector struct {
-	host      string
 	service   services.Service
 	common    openstackintel.Commoner
 	providers map[string]*gophercloud.ProviderClient
