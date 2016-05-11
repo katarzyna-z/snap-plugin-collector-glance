@@ -15,7 +15,6 @@ limitations under the License.
 package collector
 
 import (
-	"os"
 	"strings"
 	"time"
 
@@ -23,6 +22,7 @@ import (
 
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
+	"github.com/intelsdi-x/snap/core"
 
 	"github.com/intelsdi-x/snap-plugin-utilities/config"
 	"github.com/intelsdi-x/snap-plugin-utilities/ns"
@@ -34,7 +34,7 @@ import (
 
 const (
 	name    = "glance"
-	version = 1
+	version = 2
 	plgtype = plugin.CollectorPluginType
 	vendor  = "intel"
 	fs      = "openstack"
@@ -42,19 +42,14 @@ const (
 
 // New creates initialized instance of Glance collector
 func New() *collector {
-	host, err := os.Hostname()
-	if err != nil {
-		host = "localhost"
-	}
-
 	providers := map[string]*gophercloud.ProviderClient{}
-	return &collector{host: host, providers: providers}
+	return &collector{providers: providers}
 }
 
 // GetMetricTypes returns list of available metric types
 // It returns error in case retrieval was not successful
-func (c *collector) GetMetricTypes(cfg plugin.PluginConfigType) ([]plugin.PluginMetricType, error) {
-	mts := []plugin.PluginMetricType{}
+func (c *collector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, error) {
+	mts := []plugin.MetricType{}
 	tenant := ""
 	item, err := config.GetConfigItem(cfg, "tenant")
 	if err != nil {
@@ -77,8 +72,8 @@ func (c *collector) GetMetricTypes(cfg plugin.PluginConfigType) ([]plugin.Plugin
 	ns.FromCompositionTags(metrics, current, &namespaces)
 
 	for _, namespace := range namespaces {
-		mts = append(mts, plugin.PluginMetricType{
-			Namespace_: strings.Split(namespace, "/"),
+		mts = append(mts, plugin.MetricType{
+			Namespace_: core.NewNamespace(strings.Split(namespace, "/")...),
 			Config_:    cfg.ConfigDataNode,
 		})
 	}
@@ -88,11 +83,11 @@ func (c *collector) GetMetricTypes(cfg plugin.PluginConfigType) ([]plugin.Plugin
 
 // CollectMetrics returns list of requested metric values
 // It returns error in case retrieval was not successful
-func (c *collector) CollectMetrics(metricTypes []plugin.PluginMetricType) ([]plugin.PluginMetricType, error) {
+func (c *collector) CollectMetrics(metricTypes []plugin.MetricType) ([]plugin.MetricType, error) {
 	//allImages := map[string]types.Images{}
 
 	// get credentials and endpoint from configuration
-	items, err := config.GetConfigItems(metricTypes[0], []string{"endpoint", "tenant", "user", "password"})
+	items, err := config.GetConfigItems(metricTypes[0], "endpoint", "tenant", "user", "password")
 	if err != nil {
 		return nil, err
 	}
@@ -113,9 +108,9 @@ func (c *collector) CollectMetrics(metricTypes []plugin.PluginMetricType) ([]plu
 		return nil, err
 	}
 
-	metrics := []plugin.PluginMetricType{}
+	metrics := []plugin.MetricType{}
 	for _, metricType := range metricTypes {
-		namespace := metricType.Namespace()
+		namespace := metricType.Namespace().Strings()
 		// Construct temporary struct to generate namespace based on tags
 		metricContainer := struct {
 			I struct {
@@ -132,10 +127,9 @@ func (c *collector) CollectMetrics(metricTypes []plugin.PluginMetricType) ([]plu
 		}
 
 		// Extract values by namespace from temporary struct and create metrics
-		metric := plugin.PluginMetricType{
-			Source_:    c.host,
+		metric := plugin.MetricType{
 			Timestamp_: time.Now(),
-			Namespace_: namespace,
+			Namespace_: metricType.Namespace(),
 			Data_:      ns.GetValueByNamespace(metricContainer, namespace[4:]),
 		}
 		metrics = append(metrics, metric)
@@ -164,7 +158,6 @@ func Meta() *plugin.PluginMeta {
 }
 
 type collector struct {
-	host      string
 	service   services.Service
 	common    openstackintel.Commoner
 	providers map[string]*gophercloud.ProviderClient
