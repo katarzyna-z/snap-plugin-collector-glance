@@ -15,21 +15,21 @@ limitations under the License.
 package main
 
 import (
-    "os"
+	"os"
 
-    "github.com/intelsdi-x/snap/control/plugin"
+	"github.com/intelsdi-x/snap/control/plugin"
 
-    "github.com/intelsdi-x/snap-plugin-collector-glance/collector"
+	"github.com/intelsdi-x/snap-plugin-collector-glance/collector"
 )
 
-func main(){
+func main() {
 
-    plg := collector.New()
-    if plg == nil {
-        panic("Plugin could not be initialized")
-    }
+	plg := collector.New()
+	if plg == nil {
+		panic("Plugin could not be initialized")
+	}
 
-    plugin.Start(
+	plugin.Start(
 		collector.Meta(),
 		plg,
 		os.Args[1],

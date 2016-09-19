@@ -19,4 +19,3 @@ type Tenant struct {
 	Name string `json:"name"`
 	ID   string
 }
-
