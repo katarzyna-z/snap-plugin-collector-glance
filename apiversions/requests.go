@@ -15,8 +15,9 @@ limitations under the License.
 package apiversions
 
 import (
-	"github.com/rackspace/gophercloud"
 	"net/http"
+
+	"github.com/rackspace/gophercloud"
 )
 
 // Get will retrieve the image type with the provided ID. To extract the image

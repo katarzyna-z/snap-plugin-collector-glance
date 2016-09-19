@@ -16,6 +16,6 @@ package types
 
 // Images represent glance image metrics
 type Images struct {
-	Count      int    `json:"count"`
-	Bytes      int    `json:"bytes"`
+	Count int `json:"count"`
+	Bytes int `json:"bytes"`
 }
