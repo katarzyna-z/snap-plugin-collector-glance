@@ -15,7 +15,6 @@ limitations under the License.
 package collector
 
 import (
-	"strings"
 	"time"
 
 	"github.com/rackspace/gophercloud"
@@ -50,34 +49,34 @@ func New() *collector {
 // It returns error in case retrieval was not successful
 func (c *collector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, error) {
 	mts := []plugin.MetricType{}
-	tenant := ""
-	item, err := config.GetConfigItem(cfg, "tenant")
-	if err != nil {
-		tenant = "*"
-	} else {
-		tenant = item.(string)
+	isTenantConfig := false
+
+	tenantName, err := config.GetConfigItem(cfg, "tenant")
+	if err == nil {
+		isTenantConfig = true
 	}
 
-	namespaces := []string{}
-	// Construct temporary struct to generate namespace based on tags
-	var metrics struct {
-		I struct {
-			Prv types.Images `json:"private"`
-			Pub types.Images `json:"public"`
-			Sha types.Images `json:"shared"`
-		} `json:"images"`
+	images := []string{"private", "public", "shared"}
+	kinds := []string{"bytes", "count"}
+
+	for _, image := range images {
+		for _, kind := range kinds {
+			namespace := core.NewNamespace(vendor, fs, name)
+
+			if isTenantConfig {
+				namespace = namespace.AddStaticElement(tenantName.(string))
+			} else {
+				namespace = namespace.AddDynamicElement("tenant", "name of the tenant")
+			}
+
+			namespace = namespace.AddStaticElements("images", image, kind)
+
+			mts = append(mts, plugin.MetricType{
+				Namespace_: namespace,
+				Config_:    cfg.ConfigDataNode,
+			})
+		}
 	}
-
-	current := strings.Join([]string{vendor, fs, name, tenant}, "/")
-	ns.FromCompositionTags(metrics, current, &namespaces)
-
-	for _, namespace := range namespaces {
-		mts = append(mts, plugin.MetricType{
-			Namespace_: core.NewNamespace(strings.Split(namespace, "/")...),
-			Config_:    cfg.ConfigDataNode,
-		})
-	}
-
 	return mts, nil
 }
 
