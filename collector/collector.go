@@ -15,7 +15,6 @@ limitations under the License.
 package collector
 
 import (
-	"strings"
 	"time"
 
 	"github.com/rackspace/gophercloud"
@@ -34,7 +33,7 @@ import (
 
 const (
 	name    = "glance"
-	version = 2
+	version = 3
 	plgtype = plugin.CollectorPluginType
 	vendor  = "intel"
 	fs      = "openstack"
@@ -50,34 +49,34 @@ func New() *collector {
 // It returns error in case retrieval was not successful
 func (c *collector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, error) {
 	mts := []plugin.MetricType{}
-	tenant := ""
-	item, err := config.GetConfigItem(cfg, "tenant")
-	if err != nil {
-		tenant = "*"
-	} else {
-		tenant = item.(string)
+	isTenantConfig := false
+
+	tenantName, err := config.GetConfigItem(cfg, "tenant")
+	if err == nil {
+		isTenantConfig = true
 	}
 
-	namespaces := []string{}
-	// Construct temporary struct to generate namespace based on tags
-	var metrics struct {
-		I struct {
-			Prv types.Images `json:"private"`
-			Pub types.Images `json:"public"`
-			Sha types.Images `json:"shared"`
-		} `json:"images"`
+	imageTypes := []string{"private", "public", "shared"}
+	dataTypes := []string{"bytes", "count"}
+
+	for _, imageType := range imageTypes {
+		for _, dataType := range dataTypes {
+			namespace := core.NewNamespace(vendor, fs, name)
+
+			if isTenantConfig {
+				namespace = namespace.AddStaticElement(tenantName.(string))
+			} else {
+				namespace = namespace.AddDynamicElement("tenant", "name of the tenant")
+			}
+
+			namespace = namespace.AddStaticElements("images", imageType, dataType)
+
+			mts = append(mts, plugin.MetricType{
+				Namespace_: namespace,
+				Config_:    cfg.ConfigDataNode,
+			})
+		}
 	}
-
-	current := strings.Join([]string{vendor, fs, name, tenant}, "/")
-	ns.FromCompositionTags(metrics, current, &namespaces)
-
-	for _, namespace := range namespaces {
-		mts = append(mts, plugin.MetricType{
-			Namespace_: core.NewNamespace(strings.Split(namespace, "/")...),
-			Config_:    cfg.ConfigDataNode,
-		})
-	}
-
 	return mts, nil
 }
 
