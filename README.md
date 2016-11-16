@@ -1,6 +1,6 @@
-# snap plugin collector - glance
+# Snap plugin collector - glance
 
-snap plugin for collecting metrics from OpenStack Glance module. 
+Snap plugin for collecting metrics from OpenStack Glance module.
 
 1. [Getting Started](#getting-started)
   * [System Requirements](#system-requirements)
@@ -9,7 +9,7 @@ snap plugin for collecting metrics from OpenStack Glance module.
   * [Configuration and Usage](#configuration-and-usage)
 2. [Documentation](#documentation)
   * [Collected Metrics](#collected-metrics)
-  * [snap's Global Config](#snaps-global-config)
+  * [Snap's Global Config](#snaps-global-config)
   * [Task manifest](#task-manifest)
   * [Examples](#examples)
   * [Roadmap](#roadmap)
@@ -27,29 +27,32 @@ It can run locally on the host, or in proxy mode (communicating with the host vi
  * Supports Glance v1 and v2 APIs
  
 ### Operating systems
-All OSs currently supported by snap:
+All OSs currently supported by Snap:
 * Linux/amd64
 
 ### Installation
-#### Download glance plugin binary:
-You can get the pre-built binaries for your OS and architecture at snap's [GitHub Releases](https://github.com/intelsdi-x/snap/releases) page. Download the plugins package from the latest release, unzip and store in a path you want `snapd` to access.
+#### Download the plugin binary:
+
+You can get the pre-built binaries for your OS and architecture from the plugin's [GitHub Releases](https://github.com/intelsdi-x/snap-plugin-collector-glance/releasess) page. Download the plugin from the latest release and load it into `snapd` (`/opt/snap/plugins` is the default location for Snap packages).
 
 #### To build the plugin binary:
-Fork https://github.com/intelsdi-x/snap-plugin-collector-glance
 
-Clone repo into `$GOPATH/src/github/intelsdi-x/`:
+Fork https://github.com/intelsdi-x/snap-plugin-collector-glance
+Clone repo into `$GOPATH/src/github.com/intelsdi-x/`:
+
 ```
-$ git clone https://github.com/<yourGithubID>/snap-plugin-collector-glance
+$ git clone https://github.com/<yourGithubID>/snap-plugin-collector-glance.git
 ```
-Build the plugin by running make in repo:
+
+Build the Snap glance plugin by running make within the cloned repo:
 ```
 $ make
 ```
-This builds the plugin in `/build/rootfs`
+This builds the plugin in `./build/`
 
 ### Configuration and Usage
-* Set up the [snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started).
-* Create Global Config, see description in [snap's Global Config] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/README.md#snaps-global-config).
+* Set up the [Snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started).
+* Create Global Config, see description in [Snap's Global Config] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/README.md#snaps-global-config).
 * Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/README.md#examples).
 
 #### Suggestions
@@ -68,8 +71,8 @@ intel/openstack/glance/\<tenant_name\>/images/public/bytes | int | Total number 
 intel/openstack/glance/\<tenant_name\>/images/private/bytes | int | Total number of bytes used by OpenStack public images for given tenant
 intel/openstack/glance/\<tenant_name\>/images/shared/bytes | int | Total number of bytes used by OpenStack shared images for given tenant
 
-### snap's Global Config
-Global configuration files are described in [snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPD_CONFIGURATION.md). You have to add section "glance" in "collector" section and then specify following options:
+### Snap's Global Config
+Global configuration files are described in [Snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPD_CONFIGURATION.md). You have to add section "glance" in "collector" section and then specify following options:
 - `"tenant"` - name of the tenant, this parameter is optional. It can be provided at later stage, in task manifest configuration section for metrics.
 
 See example Global Config in [examples/cfg/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg/).
@@ -84,84 +87,72 @@ User need to provide following parameters in configuration for collector:
 See example task manifest in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/tasks/).
 
 ### Examples
-Example running snap-plugin-collector-glance plugin and writing data to a file.
+Example of running Snap glance collector and writing data to file.
 
-Make sure that your `$SNAP_PATH` is set, if not:
+Download an [example Snap global config](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg/) file.
 ```
-$ export SNAP_PATH=<snapDirectoryPath>/build
+$ curl -sfLO https://raw.githubusercontent.com/intelsdi-x/snap-plugin-collector-glance/master/examples/cfg/cfg.json
 ```
-Other paths to files should be set according to your configuration, using a file you should indicate where it is located.
+Ensure to provide your Keystone instance address and credentials.
 
-Create Global Config, see example in [examples/cfg/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg/).
+Ensure [Snap daemon is running](https://github.com/intelsdi-x/snap#running-snap) with provided configuration file:
+* command line: `snapd -l 1 -t 0 --config cfg.json&`
 
-In one terminal window, open the snap daemon (in this case with logging set to 1,  trust disabled and global configuration saved in cfg.json):
+Download and load Snap plugins:
 ```
-$ $SNAP_PATH/bin/snapd -l 1 -t 0 --config cfg.json
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-glance/latest/linux/x86_64/snap-plugin-collector-glance
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
+$ chmod 755 snap-plugin-*
+$ snapctl plugin load snap-plugin-collector-glance
+$ snapctl plugin load snap-plugin-publisher-file
 ```
-In another terminal window:
 
-Load snap-plugin-collector-glance plugin:
+See all available metrics:
+
 ```
-$ $SNAP_PATH/bin/snapctl plugin load snap-plugin-collector-glance
+$ snapctl metric list
 ```
-Load file plugin for publishing:
+
+Download an [example task file](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/tasks/) and load it:
 ```
-$ $SNAP_PATH/bin/snapctl plugin load $SNAP_PATH/plugin/snap-publisher-file
+$ curl -sfLO https://raw.githubusercontent.com/intelsdi-x/snap-plugin-collector-glance/master/examples/tasks/task.json
+$ snapctl task create -t task.json
+Using task manifest to create task
+Task created
+ID: 02dd7ff4-8106-47e9-8b86-70067cd0a850
+Name: Task-02dd7ff4-8106-47e9-8b86-70067cd0a850
+State: Running
 ```
-See available metrics for your system:
+
+See realtime output from `snapctl task watch <task_id>` (CTRL+C to exit)
 ```
-$ $SNAP_PATH/bin/snapctl metric list
+$ snapctl task watch 02dd7ff4-8106-47e9-8b86-70067cd0a850
 ```
-Create a task manifest file to use snap-plugin-collector-glance plugin (exemplary file in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/tasks/)):
+
+This data is published to a file `/tmp/published_glance.log` per task specification
+
+Stop task:
 ```
-{
-    "version": 1,
-    "schedule": {
-        "type": "simple",
-        "interval": "60s"
-    },
-    "workflow": {
-        "collect": {
-            "metrics": {
-		        "/intel/openstack/glance/*/images/public/count": {},
-		        "/intel/openstack/glance/*/images/public/bytes": {}
-           },
-            "config": {
-              "/intel/openstack/glance": {
-                "endpoint": "http://keystone.public.org:5000",
-                "user": "admin",
-                "password": "admin",
-                "tenant": "test_tenant"
-              }
-            },
-            "process": null,
-            "publish": null
-        }
-    }
-}
-```
-Create a task:
-```
-$ $SNAP_PATH/bin/snapctl task create -t task.json
+$ snapctl task stop 02dd7ff4-8106-47e9-8b86-70067cd0a850
+Task stopped:
+ID: 02dd7ff4-8106-47e9-8b86-70067cd0a850
 ```
 
 ### Roadmap
 There isn't a current roadmap for this plugin, but it is in active development. As we launch this plugin, we do not have any outstanding requirements for the next release.
 
 ## Community Support
-This repository is one of **many** plugins in **snap**, a powerful telemetry framework. The full project is at http://github.com/intelsdi-x/snap.
-To reach out on other use cases, visit:
-* [snap Gitter channel](https://gitter.im/intelsdi-x/snap)
+This repository is one of **many** plugins in **Snap**, a powerful telemetry framework. See the full project at http://github.com/intelsdi-x/snap.
+
+To reach out to other users, head to the [main framework](https://github.com/intelsdi-x/snap#community-support).
 
 ## Contributing
 We love contributions!
 
 There's more than one way to give back, from examples to blogs to code updates. See our recommended process in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-And **thank you!** Your contribution, through code and participation, is incredibly important to us.
-
 ## License
-[snap](http://github.com/intelsdi-x/snap), along with this plugin, is an Open Source software released under the Apache 2.0 [License](LICENSE).
+[Snap](http://github.com/intelsdi-x/snap), along with this plugin, is an Open Source software released under the Apache 2.0 [License](LICENSE).
 
 ## Acknowledgements
 * Author: [Marcin Krolik](https://github.com/marcin-krolik)
