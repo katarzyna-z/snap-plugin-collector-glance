@@ -75,7 +75,7 @@ intel/openstack/glance/\<tenant_name\>/images/shared/bytes | int | Total number 
 Global configuration files are described in [Snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPD_CONFIGURATION.md). You have to add section "glance" in "collector" section and then specify following options:
 - `"tenant"` - name of the tenant, this parameter is optional. It can be provided at later stage, in task manifest configuration section for metrics.
 
-See example Global Config in [examples/cfg/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg/).
+See example Global Config in [examples/cfg/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg).
 
 ###Task manifest
 User need to provide following parameters in configuration for collector:
@@ -89,7 +89,7 @@ See example task manifest in [examples/tasks/] (https://github.com/intelsdi-x/sn
 ### Examples
 Example of running Snap glance collector and writing data to file.
 
-Download an [example Snap global config](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg/) file.
+Download an [example Snap global config](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg/cfg.json) file.
 ```
 $ curl -sfLO https://raw.githubusercontent.com/intelsdi-x/snap-plugin-collector-glance/master/examples/cfg/cfg.json
 ```
@@ -113,7 +113,7 @@ See all available metrics:
 $ snapctl metric list
 ```
 
-Download an [example task file](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/tasks/) and load it:
+Download an [example task file](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/tasks/task.json) and load it:
 ```
 $ curl -sfLO https://raw.githubusercontent.com/intelsdi-x/snap-plugin-collector-glance/master/examples/tasks/task.json
 $ snapctl task create -t task.json
