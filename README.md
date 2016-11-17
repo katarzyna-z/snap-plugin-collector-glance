@@ -33,7 +33,7 @@ All OSs currently supported by Snap:
 ### Installation
 #### Download the plugin binary:
 
-You can get the pre-built binaries for your OS and architecture from the plugin's [GitHub Releases](https://github.com/intelsdi-x/snap-plugin-collector-glance/releasess) page. Download the plugin from the latest release and load it into `snapd` (`/opt/snap/plugins` is the default location for Snap packages).
+You can get the pre-built binaries for your OS and architecture from the plugin's [GitHub Releases](https://github.com/intelsdi-x/snap-plugin-collector-glance/releases) page. Download the plugin from the latest release and load it into `snapd` (`/opt/snap/plugins` is the default location for Snap packages).
 
 #### To build the plugin binary:
 
@@ -51,9 +51,9 @@ $ make
 This builds the plugin in `./build/`
 
 ### Configuration and Usage
-* Set up the [Snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started).
-* Create Global Config, see description in [Snap's Global Config] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/README.md#snaps-global-config).
-* Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/README.md#examples).
+* Set up the [Snap framework](https://github.com/intelsdi-x/snap#getting-started).
+* Create Global Config, see description in [Snap's Global Config] (https://github.com/intelsdi-x/snap-plugin-collector-glance#snaps-global-config).
+* Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-glance#examples).
 
 #### Suggestions
 * It is not recommended to set interval for task less than 20 seconds. This may lead to overloading Glance API with requests.
@@ -75,7 +75,7 @@ intel/openstack/glance/\<tenant_name\>/images/shared/bytes | int | Total number 
 Global configuration files are described in [Snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPD_CONFIGURATION.md). You have to add section "glance" in "collector" section and then specify following options:
 - `"tenant"` - name of the tenant, this parameter is optional. It can be provided at later stage, in task manifest configuration section for metrics.
 
-See example Global Config in [examples/cfg/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg).
+See example Global Config in [examples/cfg] (examples/cfg/cfg.json).
 
 ###Task manifest
 User need to provide following parameters in configuration for collector:
@@ -84,12 +84,12 @@ User need to provide following parameters in configuration for collector:
 - `"user"` -  user name which has access to tenant
 - `"password"` - user password
 
-See example task manifest in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/tasks/).
+See example task manifest in [examples/task] (examples/tasks/task.json).
 
 ### Examples
 Example of running Snap glance collector and writing data to file.
 
-Download an [example Snap global config](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/cfg/cfg.json) file.
+Download an [example Snap global config](examples/cfg/cfg.json) file.
 ```
 $ curl -sfLO https://raw.githubusercontent.com/intelsdi-x/snap-plugin-collector-glance/master/examples/cfg/cfg.json
 ```
@@ -113,7 +113,7 @@ See all available metrics:
 $ snapctl metric list
 ```
 
-Download an [example task file](https://github.com/intelsdi-x/snap-plugin-collector-glance/blob/master/examples/tasks/task.json) and load it:
+Download an [example task file](examples/tasks/task.json) and load it:
 ```
 $ curl -sfLO https://raw.githubusercontent.com/intelsdi-x/snap-plugin-collector-glance/master/examples/tasks/task.json
 $ snapctl task create -t task.json
