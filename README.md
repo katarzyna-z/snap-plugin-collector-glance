@@ -52,8 +52,8 @@ This builds the plugin in `./build/`
 
 ### Configuration and Usage
 * Set up the [Snap framework](https://github.com/intelsdi-x/snap#getting-started).
-* Create Global Config, see description in [Snap's Global Config] (https://github.com/intelsdi-x/snap-plugin-collector-glance#snaps-global-config).
-* Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-glance#examples).
+* Create Global Config, see description in [Snap's Global Config] (#snaps-global-config).
+* Load the plugin and create a task, see example in [Examples](#examples).
 
 #### Suggestions
 * It is not recommended to set interval for task less than 20 seconds. This may lead to overloading Glance API with requests.
