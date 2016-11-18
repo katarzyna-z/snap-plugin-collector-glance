@@ -18,8 +18,13 @@
                 "tenant": "test_tenant"
               }
             },
-            "process": null,
-            "publish": null
+            "publish": [
+              {
+                "config": {
+                  "file": "/tmp/published_glance"
+                }
+              }
+            ]
         }
     }
 }
