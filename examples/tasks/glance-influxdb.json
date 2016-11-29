@@ -19,13 +19,18 @@
               }
             },
             "publish": [
-              {
-		"plugin_name": "file",
-                "config": {
-                  "file": "/tmp/published_glance"
+                {
+                    "plugin_name": "influxdb",
+                    "config": {
+                        "host": "localhost",
+                        "port": 8086,
+                        "database": "test",
+                        "user": "admin",
+                        "password": "admin"
+                    }
                 }
-              }
             ]
         }
     }
 }
+

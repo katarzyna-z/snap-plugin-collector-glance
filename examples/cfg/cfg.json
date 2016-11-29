@@ -1,14 +1,15 @@
 {
-  "control": {},
-  "scheduler": {},
-  "plugins": {
-    "collector": {
-      "glance": {
-        "all": {
+  "control": {
+    "plugins": {
+      "collector": {
+        "glance": {
+          "all": {
+          }
         }
-      }
-    },
-    "publisher": {},
-    "processor": {}
+      },
+      "publisher": {},
+      "processor": {}
+    }
   }
 }
+
