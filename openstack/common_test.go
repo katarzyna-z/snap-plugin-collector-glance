@@ -68,7 +68,7 @@ func (s *CommonSuite) TestGetAPI() {
 	Convey("Given api versions are requested", s.T(), func() {
 		c := Common{}
 		Convey("When GetAPIVersions is called", func() {
-			provider, err := Authenticate(th.Endpoint(), "me", "secret", "tenant")
+			provider, err := Authenticate(th.Endpoint(), "me", "secret", "tenant", "", "")
 			th.AssertNoErr(s.T(), err)
 			th.CheckEquals(s.T(), s.Token, provider.TokenID)
 

@@ -33,7 +33,7 @@ import (
 
 const (
 	name    = "glance"
-	version = 3
+	version = 4
 	plgtype = plugin.CollectorPluginType
 	vendor  = "intel"
 	fs      = "openstack"
@@ -83,7 +83,8 @@ func (c *collector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, 
 // CollectMetrics returns list of requested metric values
 // It returns error in case retrieval was not successful
 func (c *collector) CollectMetrics(metricTypes []plugin.MetricType) ([]plugin.MetricType, error) {
-	//allImages := map[string]types.Images{}
+	domain_name := ""
+	domain_id := ""
 
 	// get credentials and endpoint from configuration
 	items, err := config.GetConfigItems(metricTypes[0], "endpoint", "tenant", "user", "password")
@@ -95,8 +96,16 @@ func (c *collector) CollectMetrics(metricTypes []plugin.MetricType) ([]plugin.Me
 	tenant := items["tenant"].(string)
 	user := items["user"].(string)
 	password := items["password"].(string)
+	dom_name, _ := config.GetConfigItem(metricTypes[0], "domain_name")
+	dom_id, _ := config.GetConfigItem(metricTypes[0], "domain_id")
+	if dom_name != nil {
+		domain_name = dom_name.(string)
+	}
+	if dom_id != nil {
+		domain_id = dom_id.(string)
+	}
 
-	if err := c.authenticate(endpoint, tenant, user, password); err != nil {
+	if err := c.authenticate(endpoint, tenant, user, password, domain_name, domain_id); err != nil {
 		return nil, err
 	}
 
@@ -162,9 +171,9 @@ type collector struct {
 	providers map[string]*gophercloud.ProviderClient
 }
 
-func (c *collector) authenticate(endpoint, tenant, user, password string) error {
+func (c *collector) authenticate(endpoint, tenant, user, password, domain_name, domain_id string) error {
 	if _, found := c.providers[tenant]; !found {
-		provider, err := openstackintel.Authenticate(endpoint, user, password, tenant)
+		provider, err := openstackintel.Authenticate(endpoint, user, password, tenant, domain_name, domain_id)
 		if err != nil {
 			return err
 		}
