@@ -56,7 +56,7 @@ func (s *GlanceV1Suite) TestGetImages() {
 	Convey("Given Glance images are requested", s.T(), func() {
 
 		Convey("When authentication is required", func() {
-			provider, err := openstackintel.Authenticate(th.Endpoint(), "me", "secret", "tenant")
+			provider, err := openstackintel.Authenticate(th.Endpoint(), "me", "secret", "tenant", "", "")
 			th.AssertNoErr(s.T(), err)
 			th.CheckEquals(s.T(), s.Token, provider.TokenID)
 

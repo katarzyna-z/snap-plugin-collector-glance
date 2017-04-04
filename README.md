@@ -83,6 +83,9 @@ User need to provide following parameters in configuration for collector:
 - `"tenant"` - name of the tenant, this is required if not provided in global config
 - `"user"` -  user name which has access to tenant
 - `"password"` - user password
+If you're using authentication API in v3 you need to set one of those two configuration options:
+- `"domain_name"` - domain name
+- `"domain_id"` - domain name
 
 See example task manifest in [examples/task] (examples/tasks/task.json).
 

@@ -50,7 +50,7 @@ type Common struct{}
 func (c Common) GetTenants(endpoint, user, password string) ([]types.Tenant, error) {
 	tnts := []types.Tenant{}
 
-	provider, err := Authenticate(endpoint, user, password, "")
+	provider, err := Authenticate(endpoint, user, password, "", "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -108,13 +108,19 @@ func (c Common) GetApiVersions(provider *gophercloud.ProviderClient) ([]types.Ap
 
 // Authenticate is used to authenticate user for given tenant. Request is send to provided Keystone endpoint
 // Returns authenticated provider client, which is used as a base for service clients.
-func Authenticate(endpoint, user, password, tenant string) (*gophercloud.ProviderClient, error) {
+func Authenticate(endpoint, user, password, tenant, domain_name, domain_id string) (*gophercloud.ProviderClient, error) {
 	authOpts := gophercloud.AuthOptions{
 		IdentityEndpoint: endpoint,
 		Username:         user,
 		Password:         password,
 		TenantName:       tenant,
 		AllowReauth:      true,
+	}
+	if domain_name != "" && domain_id == "" {
+		authOpts.DomainName = domain_name
+	}
+	if domain_id != "" && domain_name == "" {
+		authOpts.DomainID = domain_id
 	}
 
 	provider, err := openstack.AuthenticatedClient(authOpts)
